@@ -80,14 +80,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     password2: string,
     phone_number?: string
   ) => {
-    await apiClient.post('/api/auth/register/', {
-      username,
-      email,
-      password,
-      password2,
-      phone_number,
-    })
-    // no auto-login on signup
+    try {
+      await apiClient.post('/api/auth/register/', {
+        username,
+        email,
+        password,
+        password2,
+        phone_number,
+      })
+    } catch (err: any) {
+      // 🔥 THIS IS THE IMPORTANT PART
+      console.error('DJANGO REGISTER ERROR RESPONSE:', err.response?.data)
+      throw err
+    }
   }
 
   const logout = () => {
