@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 interface SignupFormData {
+  username: string
   email: string
+  phone_number?: string
   password: string
   password_confirm: string
-  phone_number?: string
 }
 
 const SignupPage: React.FC = () => {
@@ -14,29 +15,26 @@ const SignupPage: React.FC = () => {
   const { register } = useAuth()
 
   const [formData, setFormData] = useState<SignupFormData>({
+    username: '',
     email: '',
+    phone_number: '',
     password: '',
     password_confirm: '',
-    phone_number: '',
   })
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (
+      !formData.username ||
       !formData.email ||
       !formData.password ||
       !formData.password_confirm
@@ -55,6 +53,7 @@ const SignupPage: React.FC = () => {
 
     try {
       await register(
+        formData.username,
         formData.email,
         formData.password,
         formData.password_confirm,
@@ -62,12 +61,10 @@ const SignupPage: React.FC = () => {
       )
 
       navigate('/login', {
-        state: {
-          message: 'Account created successfully. Please sign in.',
-        },
+        state: { message: 'Account created successfully. Please sign in.' },
       })
     } catch {
-      setError('Registration failed. Please check your details.')
+      setError('Registration failed. Please check your information.')
     } finally {
       setLoading(false)
     }
@@ -81,12 +78,28 @@ const SignupPage: React.FC = () => {
 
       <form onSubmit={handleSubmit}>
         <input
+          name="username"
+          placeholder="Username"
+          value={formData.username}
+          onChange={handleChange}
+          required
+        />
+
+        <input
           type="email"
           name="email"
           placeholder="Email"
           value={formData.email}
           onChange={handleChange}
           required
+        />
+
+        <input
+          type="tel"
+          name="phone_number"
+          placeholder="Phone number (optional)"
+          value={formData.phone_number}
+          onChange={handleChange}
         />
 
         <input
@@ -101,22 +114,14 @@ const SignupPage: React.FC = () => {
         <input
           type="password"
           name="password_confirm"
-          placeholder="Confirm Password"
+          placeholder="Confirm password"
           value={formData.password_confirm}
           onChange={handleChange}
           required
         />
 
-        <input
-          type="tel"
-          name="phone_number"
-          placeholder="Phone number (optional)"
-          value={formData.phone_number}
-          onChange={handleChange}
-        />
-
         <button type="submit" disabled={loading}>
-          {loading ? 'Creating account…' : 'Sign Up'}
+          {loading ? 'Creating account…' : 'Create Account'}
         </button>
       </form>
     </div>

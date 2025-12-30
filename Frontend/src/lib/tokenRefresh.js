@@ -5,13 +5,13 @@ export async function refreshToken() {
   if (!refresh) return null
 
   try {
-    const response = await apiClient.post('/api/auth/token/refresh/', {
+    const res = await apiClient.post('/api/auth/token/refresh/', {
       refresh,
     })
 
-    if (response.data?.access) {
-      localStorage.setItem('access_token', response.data.access)
-      return response.data.access
+    if (res.data?.access) {
+      localStorage.setItem('access_token', res.data.access)
+      return res.data.access
     }
 
     return null

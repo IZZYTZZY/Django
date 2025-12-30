@@ -1,14 +1,15 @@
 import React, {
   createContext,
   useContext,
-  useState,
   useEffect,
+  useState,
   type ReactNode,
 } from 'react'
 import { apiClient } from '../lib/apiClient'
 
 interface User {
   id: number
+  username: string
   email: string
   phone_number?: string
 }
@@ -16,75 +17,77 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
+  isAuthenticated: boolean
   login: (email: string, password: string) => Promise<void>
   register: (
+    username: string,
     email: string,
     password: string,
     password2: string,
     phone_number?: string
   ) => Promise<void>
   logout: () => void
-  isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-interface AuthProviderProps {
-  children: ReactNode
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   const isAuthenticated = !!user
 
-  // Check existing session
   useEffect(() => {
-    const checkAuth = async () => {
+    const init = async () => {
       const token = localStorage.getItem('access_token')
-      if (token) {
-        try {
-          const response = await apiClient.get('/api/auth/profile/')
-          setUser(response.data)
-        } catch {
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
-        }
+      if (!token) {
+        setLoading(false)
+        return
       }
-      setLoading(false)
+
+      try {
+        const res = await apiClient.get('/api/auth/profile/')
+        setUser(res.data)
+      } catch {
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
+        setUser(null)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    checkAuth()
+    init()
   }, [])
 
   const login = async (email: string, password: string) => {
-    const response = await apiClient.post('/api/auth/login/', {
+    const res = await apiClient.post('/api/auth/login/', {
       email,
       password,
     })
 
-    const { access, refresh } = response.data
-    localStorage.setItem('access_token', access)
-    localStorage.setItem('refresh_token', refresh)
+    localStorage.setItem('access_token', res.data.access)
+    localStorage.setItem('refresh_token', res.data.refresh)
 
-    const profileResponse = await apiClient.get('/api/auth/profile/')
-    setUser(profileResponse.data)
+    const profile = await apiClient.get('/api/auth/profile/')
+    setUser(profile.data)
   }
 
   const register = async (
+    username: string,
     email: string,
     password: string,
     password2: string,
     phone_number?: string
   ) => {
     await apiClient.post('/api/auth/register/', {
+      username,
       email,
       password,
       password2,
       phone_number,
     })
-    // IMPORTANT: do NOT auto-login here
+    // no auto-login on signup
   }
 
   const logout = () => {
@@ -93,23 +96,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(null)
   }
 
-  const value: AuthContextType = {
-    user,
-    loading,
-    login,
-    register,
-    logout,
-    isAuthenticated,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isAuthenticated,
+        login,
+        register,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider')
+  return ctx
 }
-
