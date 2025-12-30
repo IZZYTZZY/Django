@@ -25,13 +25,24 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle token refresh
+// Handle token refresh (SAFE VERSION)
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // 🚫 NEVER retry auth endpoints
+    if (
+      originalRequest?.url?.includes("/api/auth/register/") ||
+      originalRequest?.url?.includes("/api/auth/login/")
+    ) {
+      return Promise.reject(error);
+    }
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
       const refreshToken = localStorage.getItem("refresh_token");
@@ -42,20 +53,20 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        const res = await axios.post(
-          `${API_BASE_URL}/api/auth/token/refresh/`,
-          { refresh: refreshToken }
-        );
+        // ⚠️ use apiClient, NOT raw axios
+        const res = await apiClient.post("/api/auth/token/refresh/", {
+          refresh: refreshToken,
+        });
 
         const { access } = res.data;
         localStorage.setItem("access_token", access);
         originalRequest.headers.Authorization = `Bearer ${access}`;
 
         return apiClient(originalRequest);
-      } catch (e) {
+      } catch {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
-        return Promise.reject(e);
+        return Promise.reject(error);
       }
     }
 
