@@ -33,7 +33,7 @@ class PerplexityClient:
 
         max_retries = 2
         retry_count = 0
-        models_to_try = ["sonar-pro", "sonar"]
+        models_to_try = ["sonar"]
 
         while retry_count <= max_retries:
             model_to_use = models_to_try[1] if retry_count == max_retries else models_to_try[0]
@@ -852,7 +852,7 @@ class PerplexityClient:
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": "llama-3-sonar-large-32k-online",
+                    "model": "sonar",
                     "messages": [{"role": "user", "content": prompt}],
                     "max_tokens": 30,
                 },
