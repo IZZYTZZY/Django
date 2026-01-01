@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
-import { apiClient } from './lib/apiClient'
+import { apiclient } from './lib/apiclient'
 import { AuthProvider } from './contexts/AuthContext'
 import { BrandProvider } from './contexts/BrandContext'
 import { BrandThemeProvider } from './contexts/BrandThemeProvider'
@@ -18,8 +18,8 @@ import './App.css'
 
 function App() {
   useEffect(() => {
-    apiClient.options('/api/health/').catch(() => {});
-    apiClient.get('/api/health/').catch(() => {});
+    apiclient.options('/api/health/').catch(() => {});
+    apiclient.get('/api/health/').catch(() => {});
   }, []);
   return (
     <div className="App">

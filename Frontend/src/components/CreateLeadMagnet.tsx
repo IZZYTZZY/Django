@@ -1,23 +1,23 @@
 import { useState } from "react";
 import { generatePDFPreview, downloadPDF } from "../lib/pdfHelper";
 
-interface CreateLeadMagnetProps {
-  selectedTemplate: string;
-  leadMagnetId: string;
-  answers: Record<string, any>;
-}
+export default function CreateLeadMagnet() {
+  // Page-owned state (this is the correct architecture)
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("modern-guide");
+  const [leadMagnetId, setLeadMagnetId] = useState<string>("");
+  const [answers, setAnswers] = useState<Record<string, any>>({});
 
-export default function CreateLeadMagnet({
-  selectedTemplate,
-  leadMagnetId,
-  answers,
-}: CreateLeadMagnetProps) {
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleGeneratePDF = async () => {
+    if (!leadMagnetId) {
+      alert("Lead magnet ID is missing");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -31,8 +31,8 @@ export default function CreateLeadMagnet({
       setPdfBlob(blob);
       setPreviewUrl(previewUrl);
       setShowPreview(true);
-    } catch (error) {
-      console.error("PDF generation failed:", error);
+    } catch (err) {
+      console.error(err);
       alert("Failed to generate PDF");
     } finally {
       setLoading(false);
