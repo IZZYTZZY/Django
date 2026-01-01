@@ -14,8 +14,8 @@ export default function CreateLeadMagnet({
 }: Props) {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [showPreview, setShowPreview] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleGeneratePDF = async () => {
@@ -39,6 +39,15 @@ export default function CreateLeadMagnet({
     } finally {
       setLoading(false);
     }
+  };
+
+  const closePreview = () => {
+    if (pdfPreviewUrl) {
+      URL.revokeObjectURL(pdfPreviewUrl);
+    }
+    setPdfPreviewUrl(null);
+    setPdfBlob(null);
+    setShowPreview(false);
   };
 
   return (
@@ -69,7 +78,7 @@ export default function CreateLeadMagnet({
                 Download PDF
               </button>
 
-              <button onClick={() => setShowPreview(false)}>
+              <button onClick={closePreview}>
                 Close
               </button>
             </div>
@@ -80,7 +89,7 @@ export default function CreateLeadMagnet({
   );
 }
 
-/* ===== Inline styles to avoid CSS hunting ===== */
+/* ===== Inline styles ===== */
 
 const backdropStyle: React.CSSProperties = {
   position: "fixed",

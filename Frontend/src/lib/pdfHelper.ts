@@ -1,23 +1,22 @@
-import { apiClient } from "./apiClient";
+import { apiclient } from "./apiClient";
+
+export interface GeneratePDFParams {
+  template_id: string;
+  lead_magnet_id: string;
+  use_ai_content: boolean;
+  user_answers: Record<string, any>;
+}
 
 /**
  * Generate PDF and return preview URL + blob
- * NO AUTO DOWNLOAD
+ * ❌ NO auto-download
  */
-export async function generatePDFPreview({
-  template_id,
-  lead_magnet_id,
-  use_ai_content,
-  user_answers,
-}) {
-  const response = await apiClient.post(
+export async function generatePDFPreview(
+  params: GeneratePDFParams
+): Promise<{ blob: Blob; previewUrl: string }> {
+  const response = await apiclient.post(
     "/api/generate-pdf/",
-    {
-      template_id,
-      lead_magnet_id,
-      use_ai_content,
-      user_answers,
-    },
+    params,
     {
       responseType: "blob",
     }
@@ -29,16 +28,13 @@ export async function generatePDFPreview({
 
   const previewUrl = URL.createObjectURL(pdfBlob);
 
-  return {
-    previewUrl,
-    blob: pdfBlob,
-  };
+  return { blob: pdfBlob, previewUrl };
 }
 
 /**
- * Explicit user-triggered download
+ * Download PDF ONLY when user clicks
  */
-export function downloadPDF(blob, filename = "lead-magnet.pdf") {
+export function downloadPDF(blob: Blob, filename = "lead-magnet.pdf") {
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
