@@ -37,14 +37,14 @@ apiclient.interceptors.request.use(
 );
 
 /**
- * Handle token refresh (SAFE, NO LOOPS)
+ * Handle token refresh (NO INFINITE LOOPS)
  */
 apiclient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // 🚫 NEVER retry auth endpoints
+    // 🚫 Never retry auth endpoints
     if (
       originalRequest?.url?.includes("/api/auth/register/") ||
       originalRequest?.url?.includes("/api/auth/login/")
@@ -63,14 +63,15 @@ apiclient.interceptors.response.use(
       }
 
       try {
-        const res = await apiclient.post("/api/auth/token/refresh/", {
-          refresh: refreshToken,
-        });
+        const res = await axios.post(
+          `${API_BASE_URL}/api/auth/token/refresh/`,
+          { refresh: refreshToken }
+        );
 
         const { access } = res.data;
         localStorage.setItem("access_token", access);
-        originalRequest.headers.Authorization = `Bearer ${access}`;
 
+        originalRequest.headers.Authorization = `Bearer ${access}`;
         return apiclient(originalRequest);
       } catch {
         localStorage.removeItem("access_token");
