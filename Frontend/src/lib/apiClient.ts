@@ -1,20 +1,31 @@
 import axios from "axios";
-import { API_BASE_URL } from "./api";
+
+/**
+ * Base API URL
+ * Must be defined in Vercel as VITE_API_BASE_URL
+ */
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // HARD FAIL if env var is missing
 if (!API_BASE_URL) {
   throw new Error("VITE_API_BASE_URL is not defined");
 }
 
-const apiClient = axios.create({
+/**
+ * Axios instance
+ */
+export const apiclient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: false,
 });
 
-// Attach access token if present
-apiClient.interceptors.request.use(
+/**
+ * Attach access token if present
+ */
+apiclient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("access_token");
     if (token) {
@@ -25,8 +36,10 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle token refresh (SAFE VERSION)
-apiClient.interceptors.response.use(
+/**
+ * Handle token refresh (SAFE, NO LOOPS)
+ */
+apiclient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
@@ -39,10 +52,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry
-    ) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       const refreshToken = localStorage.getItem("refresh_token");
@@ -53,8 +63,7 @@ apiClient.interceptors.response.use(
       }
 
       try {
-        // ⚠️ use apiClient, NOT raw axios
-        const res = await apiClient.post("/api/auth/token/refresh/", {
+        const res = await apiclient.post("/api/auth/token/refresh/", {
           refresh: refreshToken,
         });
 
@@ -62,7 +71,7 @@ apiClient.interceptors.response.use(
         localStorage.setItem("access_token", access);
         originalRequest.headers.Authorization = `Bearer ${access}`;
 
-        return apiClient(originalRequest);
+        return apiclient(originalRequest);
       } catch {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
@@ -73,5 +82,3 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-export { apiClient };

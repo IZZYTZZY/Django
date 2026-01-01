@@ -1,84 +1,78 @@
 import { useState } from "react";
 import { generatePDFPreview, downloadPDF } from "../lib/pdfHelper";
 
-type Props = {
-  templateId: string;
+interface CreateLeadMagnetProps {
+  selectedTemplate: string;
   leadMagnetId: string;
   answers: Record<string, any>;
-};
+}
 
 export default function CreateLeadMagnet({
-  templateId,
+  selectedTemplate,
   leadMagnetId,
   answers,
-}: Props) {
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+}: CreateLeadMagnetProps) {
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleGeneratePDF = async () => {
     try {
       setLoading(true);
-      setError(null);
 
-      const { previewUrl, blob } = await generatePDFPreview({
-        template_id: templateId,
+      const { blob, previewUrl } = await generatePDFPreview({
+        template_id: selectedTemplate,
         lead_magnet_id: leadMagnetId,
         use_ai_content: true,
         user_answers: answers,
       });
 
-      setPdfPreviewUrl(previewUrl);
       setPdfBlob(blob);
+      setPreviewUrl(previewUrl);
       setShowPreview(true);
-    } catch (err) {
-      console.error("PDF generation failed:", err);
-      setError("Failed to generate PDF");
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      alert("Failed to generate PDF");
     } finally {
       setLoading(false);
     }
   };
 
-  const closePreview = () => {
-    if (pdfPreviewUrl) {
-      URL.revokeObjectURL(pdfPreviewUrl);
-    }
-    setPdfPreviewUrl(null);
-    setPdfBlob(null);
-    setShowPreview(false);
+  const handleDownload = () => {
+    if (!pdfBlob) return;
+    downloadPDF(pdfBlob, "lead-magnet.pdf");
   };
 
   return (
     <>
-      <button onClick={handleGeneratePDF} disabled={loading}>
-        {loading ? "Generating…" : "Generate PDF"}
+      <button
+        onClick={handleGeneratePDF}
+        disabled={loading}
+        className="primary-btn"
+      >
+        {loading ? "Generating..." : "Generate PDF"}
       </button>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {showPreview && pdfPreviewUrl && (
-        <div style={backdropStyle}>
-          <div style={modalStyle}>
+      {showPreview && previewUrl && (
+        <div className="pdf-modal-overlay">
+          <div className="pdf-modal">
             <iframe
-              src={pdfPreviewUrl}
+              src={previewUrl}
               title="PDF Preview"
-              style={{ width: "100%", height: "600px", border: "none" }}
+              width="100%"
+              height="100%"
+              style={{ border: "none" }}
             />
 
-            <div style={actionsStyle}>
-              <button
-                onClick={() => {
-                  if (pdfBlob) {
-                    downloadPDF(pdfBlob, "lead-magnet.pdf");
-                  }
-                }}
-              >
+            <div className="pdf-modal-actions">
+              <button onClick={handleDownload} className="primary-btn">
                 Download PDF
               </button>
-
-              <button onClick={closePreview}>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="secondary-btn"
+              >
                 Close
               </button>
             </div>
@@ -88,29 +82,3 @@ export default function CreateLeadMagnet({
     </>
   );
 }
-
-/* ===== Inline styles ===== */
-
-const backdropStyle: React.CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,0.75)",
-  zIndex: 9999,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
-const modalStyle: React.CSSProperties = {
-  background: "#111",
-  width: "85%",
-  maxWidth: "1000px",
-  borderRadius: "8px",
-  padding: "16px",
-};
-
-const actionsStyle: React.CSSProperties = {
-  display: "flex",
-  justifyContent: "space-between",
-  marginTop: "12px",
-};
