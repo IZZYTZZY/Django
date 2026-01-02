@@ -29,7 +29,6 @@ const INDUSTRY_SPECIALTIES = [
   'Other'
 ]
 
-
 const FirmProfileForm: React.FC<FirmProfileFormProps> = ({ 
   initialData = {}, 
   onNext, 
@@ -52,19 +51,19 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
 
   const [currentStep, setCurrentStep] = useState(0)
 
-  const steps = [
-    'Basic Information',
-    'Industry & Size'
-  ]
+  const steps = ['Basic Information', 'Industry & Size']
 
-  const handleInputChange = (field: keyof FirmProfile, value: string | string[]) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  const handleInputChange = (
+    field: keyof FirmProfile,
+    value: string | string[]
+  ) => {
+    setFormData((prev: Partial<FirmProfile>) => ({ ...prev, [field]: value }))
   }
 
   const handleSpecialtyToggle = (specialty: string) => {
     const current = formData.industry_specialties || []
     const updated = current.includes(specialty)
-      ? current.filter(s => s !== specialty)
+      ? current.filter((s: string) => s !== specialty)
       : [...current, specialty]
     handleInputChange('industry_specialties', updated)
   }
@@ -88,7 +87,10 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
       case 0:
         return formData.firm_name && formData.work_email
       case 1:
-        return formData.firm_size && (formData.industry_specialties?.length || 0) > 0
+        return (
+          formData.firm_size &&
+          (formData.industry_specialties?.length || 0) > 0
+        )
       default:
         return false
     }
@@ -109,7 +111,9 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
                 type="text"
                 className="form-input"
                 value={formData.firm_name || ''}
-                onChange={(e) => handleInputChange('firm_name', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('firm_name', e.target.value)
+                }
                 placeholder="Enter your firm name"
               />
             </motion.div>
@@ -125,7 +129,9 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
                 type="email"
                 className="form-input"
                 value={formData.work_email || ''}
-                onChange={(e) => handleInputChange('work_email', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('work_email', e.target.value)
+                }
                 placeholder="your@company.com"
               />
             </motion.div>
@@ -141,7 +147,9 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
                 type="tel"
                 className="form-input"
                 value={formData.phone_number || ''}
-                onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('phone_number', e.target.value)
+                }
                 placeholder="+1 (555) 123-4567"
               />
             </motion.div>
@@ -157,7 +165,9 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
                 type="url"
                 className="form-input"
                 value={formData.firm_website || ''}
-                onChange={(e) => handleInputChange('firm_website', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange('firm_website', e.target.value)
+                }
                 placeholder="https://www.yourfirm.com"
               />
             </motion.div>
@@ -181,7 +191,9 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
                       name="firm_size"
                       value={option.value}
                       checked={formData.firm_size === option.value}
-                      onChange={(e) => handleInputChange('firm_size', e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange('firm_size', e.target.value)
+                      }
                     />
                     <span className="radio-label">{option.label}</span>
                   </label>
@@ -195,13 +207,17 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
               transition={{ delay: 0.1 }}
               className="form-group"
             >
-              <label className="form-label">Industry Specialty (select all that apply) *</label>
+              <label className="form-label">
+                Industry Specialty (select all that apply) *
+              </label>
               <div className="checkbox-grid">
                 {INDUSTRY_SPECIALTIES.map((specialty) => (
                   <label key={specialty} className="checkbox-option">
                     <input
                       type="checkbox"
-                      checked={(formData.industry_specialties || []).includes(specialty)}
+                      checked={(formData.industry_specialties || []).includes(
+                        specialty
+                      )}
                       onChange={() => handleSpecialtyToggle(specialty)}
                     />
                     <span className="checkbox-label">{specialty}</span>
@@ -225,9 +241,11 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
         </h1>
         <div className="form-progress">
           <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+            <div
+              className="progress-fill"
+              style={{
+                width: `${((currentStep + 1) / steps.length) * 100}%`,
+              }}
             />
           </div>
           <span className="progress-text">
@@ -236,28 +254,26 @@ const FirmProfileForm: React.FC<FirmProfileFormProps> = ({
         </div>
       </div>
 
-      <div className="form-content">
-        {renderStepContent()}
-      </div>
+      <div className="form-content">{renderStepContent()}</div>
 
       <div className="form-actions">
         {currentStep > 0 && (
-          <button 
-            type="button" 
+          <button
+            type="button"
             className="btn btn-secondary"
             onClick={handlePrevious}
           >
             Previous
           </button>
         )}
-        
-        <button 
-          type="button" 
+
+        <button
+          type="button"
           className="btn btn-primary"
           onClick={handleNext}
           disabled={!isStepValid()}
         >
-          {currentStep === steps.length - 1 ? 'Next' : 'Next'}
+          Next
         </button>
       </div>
     </div>
