@@ -5,13 +5,14 @@ import React, {
   useState,
   type ReactNode,
 } from 'react'
-import { apiClient } from '../lib/apiClient'
+import { apiclient } from '../lib/apiclient'
 
 interface User {
   id: number
   username: string
   email: string
   phone_number?: string
+  name?: string   // ✅ ADDED (only change)
 }
 
 interface AuthContextType {
@@ -46,7 +47,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const res = await apiClient.get('/api/auth/profile/')
+        const res = await apiclient.get('/api/auth/profile/')
         setUser(res.data)
       } catch {
         localStorage.removeItem('access_token')
@@ -61,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [])
 
   const login = async (email: string, password: string) => {
-    const res = await apiClient.post('/api/auth/login/', {
+    const res = await apiclient.post('/api/auth/login/', {
       email,
       password,
     })
@@ -69,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('access_token', res.data.access)
     localStorage.setItem('refresh_token', res.data.refresh)
 
-    const profile = await apiClient.get('/api/auth/profile/')
+    const profile = await apiclient.get('/api/auth/profile/')
     setUser(profile.data)
   }
 
@@ -81,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     phone_number?: string
   ) => {
     try {
-      await apiClient.post('/api/auth/register/', {
+      await apiclient.post('/api/auth/register/', {
         username,
         email,
         password,
@@ -89,7 +90,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         phone_number,
       })
     } catch (err: any) {
-      // 🔥 THIS IS THE IMPORTANT PART
       console.error('DJANGO REGISTER ERROR RESPONSE:', err.response?.data)
       throw err
     }
