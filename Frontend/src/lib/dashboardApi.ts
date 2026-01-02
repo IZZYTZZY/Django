@@ -1,4 +1,4 @@
-import { apiClient } from "./apiClient";
+import { apiClient } from "./apiclient";
 
 export async function fetchDashboardData() {
   const response = await apiClient.get("/api/dashboard/");
